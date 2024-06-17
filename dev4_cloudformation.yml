@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Linux CloudWatch Diskspace Alarms
+
+Parameters:
+  instanceid:
+    Description: "Choose an instance id"
+    Type: AWS::EC2::Instance::Id
+    Default: "i-0dfe97f51de918464"
+
+  instancename:
+    Description: "Please provide EC2 instance name"
+    Type: "String"
+    Default: "dev4"
+    MinLength: '1'
+    MaxLength: '50'
+
+  criticalsnsarn:
+    Description: "Please provide an ARN of SNS topic - CRITICAL Type"
+    Type: "String"
+    Default: "arn:aws:sns:eu-west-1:405769766697:LowDiskSpace"
+
+  volume:
+    Description: "Provide disk's/folder's name (ex.: xvda1)"
+    Type: "String"
+    Default: "/dev/nvme0n1p1"
+
+  path:
+    Description: "Provide path"
+    Type: "String"
+    Default: "/"
+
+  fstype:
+    Description: "Choose fstype - ext4 or xfs -> Ubuntu and AmazonLinux use ext4, CentOS use xfs"
+    Type: String
+    Default: "ext4"
+    AllowedValues:
+      - ext4
+      - xfs
+      - btrfs
+    ConstraintDescription: You must specify ext4, xfs, or btrfs.
+
+Resources:
+  DiskSpaceAlarmCRITICAL:
+    Type: AWS::CloudWatch::Alarm
+    DeletionPolicy: Retain
+    Properties:
+      AlarmDescription: !Sub "${instancename} - ${instanceid} - over 90% of ${volume} volume space is in use"
+      AlarmActions:
+      - !Ref criticalsnsarn
+      OKActions:
+      - !Ref criticalsnsarn
+      MetricName: "disk_used_percent"
+      Namespace: CWAgent
+      Statistic: Average
+      Period: '300'
+      EvaluationPeriods: '1'
+      Threshold: '90'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+      - Name: InstanceId
+        Value: !Ref instanceid
+      - Name: device
+        Value: !Ref volume
+      - Name: path
+        Value: !Ref path
+      - Name: fstype
+        Value: !Ref fstype
+
+Outputs:
+  CriticalAlarmName:
+    Description: The name of the created critical alarm
+    Value: !Ref DiskSpaceAlarmCRITICAL
