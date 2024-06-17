@@ -44,7 +44,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     DeletionPolicy: Retain
     Properties:
-      AlarmDescription: !Sub "${instancename} - ${instanceid} - over 90% of ${volume} volume space is in use"
+      AlarmDescription: !Sub "${instancename} - ${instanceid} - over 90%% of ${volume} volume space is in use"
       AlarmActions:
       - !Ref criticalsnsarn
       OKActions:
